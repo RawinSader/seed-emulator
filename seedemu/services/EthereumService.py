@@ -289,6 +289,7 @@ class EthereumServer(Server):
     __unlockAccounts: bool
     __prefunded_accounts: List[EthAccount]
     __consensus_mechanism: ConsensusMechanism
+    __geth_binary: str
 
     def __init__(self, id: int):
         """!
@@ -307,6 +308,7 @@ class EthereumServer(Server):
         self.__unlockAccounts = False
         self.__prefunded_accounts = [EthAccount(alloc_balance=32 * pow(10, 18), password="admin")] #create a prefunded account by default. It ensure POA network works when create/import prefunded account is not called.
         self.__consensus_mechanism = None # keep as empty to make sure the OR statement works in the install function
+        self.__geth_binary = ""
 
     def __createNewAccountCommand(self, node: Node):
         if self.__create_new_account > 0:
@@ -408,13 +410,14 @@ class EthereumServer(Server):
         node.appendFile('/tmp/eth-bootstrapper', ETHServerFileTemplates['bootstrapper'])
         node.appendFile('/tmp/eth-password', 'admin') 
 
-        node.addSoftware('software-properties-common')
-
-        # tap the eth repo
-        node.addBuildCommand('add-apt-repository ppa:ethereum/ethereum')
-
-        # install geth and bootnode
-        node.addBuildCommand('apt-get update && apt-get install --yes geth bootnode')
+        if not self.getLocalGethBinary():
+            node.addSoftware('software-properties-common')
+            # tap the eth repo
+            node.addBuildCommand('add-apt-repository ppa:ethereum/ethereum')
+            # install geth and bootnode
+            node.addBuildCommand('apt-get update && apt-get install --yes geth bootnode')
+            # setting geth binary to the install geth client
+            self.__geth_binary = "geth"
 
         # set the data directory
         datadir_option = "--datadir /root/.ethereum"
@@ -452,7 +455,7 @@ class EthereumServer(Server):
             common_flags = '{} {}'.format(common_flags, whitelist_flags)
         
         # Base geth command
-        geth_command = 'nice -n 19 geth {}'.format(common_flags)
+        geth_command = 'nice -n 19 {} {}'.format(self.__geth_binary, common_flags)
         
         # Manual vs automated geth command execution
         # In the manual approach, the geth command is only thrown in a file in /tmp/run.sh
@@ -477,6 +480,14 @@ class EthereumServer(Server):
             self.__unlockAccountsCommand(node)
             self.__addMinerStartCommand(node)
             self.__deploySmartContractCommand(node)
+
+    def useLocalGethBinary(self, cpath:str, executable:str) -> EthereumServer:
+        self.__geth_binary = "{}/{}".format(cpath, executable)
+
+        return self
+
+    def getLocalGethBinary(self) -> str:
+        return self.__geth_binary
 
     def setConsensusMechanism(self, consensus:ConsensusMechanism=ConsensusMechanism.POA) -> EthereumServer:
         '''
