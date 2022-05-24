@@ -4,7 +4,7 @@
 from seedemu.core import Emulator, Binding, Filter
 from seedemu.mergers import DEFAULT_MERGERS
 from seedemu.compiler import Docker
-from os import mkdir, chdir, getcwd, path
+from os import mkdir, chdir, getcwd, path, system
 
 
 emuA = Emulator()
@@ -39,6 +39,7 @@ def updateEthStates():
         createDirectoryAtBase(output, "eth-states/")
         for i in range(start, end):
             createDirectoryAtBase(output, "eth-states/" + str(i))
+            system("cp -r binary/geth-copy {}/eth-states/{}".format(output, i))
 
 # Render and compile
 emu.render()

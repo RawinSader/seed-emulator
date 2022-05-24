@@ -25,26 +25,23 @@ pow_1 = eth.install("eth4")
 pow_2 = eth.install("eth5")
 pow_3 = eth.install("eth6")
 
-container_path = "~/volumes"
-host_path = "{}/{}".format(os.getcwd(), "/volumes")
-binary = "geth"
+binary = "geth-copy"
 
+poa_1.createPrefundedAccounts(balance, 1).useLocalGethBinary(binary).setNoDiscover().unlockAccounts().startMiner()
+poa_2.createPrefundedAccounts(balance, 1).setNoDiscover().unlockAccounts().startMiner()
+poa_3.createPrefundedAccounts(balance, 1).setNoDiscover().unlockAccounts().startMiner()
 
-poa_1.createPrefundedAccounts(balance, 1).useLocalGethBinary(container_path, binary).unlockAccounts().startMiner()
-poa_2.createPrefundedAccounts(balance, 1).unlockAccounts().startMiner()
-poa_3.createPrefundedAccounts(balance, 1).unlockAccounts().startMiner()
-
-emu.getVirtualNode('eth1').addSharedFolder(container_path, host_path).setDisplayName('Ethereum-1-poa')
+emu.getVirtualNode('eth1').setDisplayName('Ethereum-1-poa')
 emu.getVirtualNode('eth2').setDisplayName('Ethereum-2-poa')
 emu.getVirtualNode('eth3').setDisplayName('Ethereum-3-poa')
 
-pow_1.setConsensusMechanism(ConsensusMechanism.POW).useLocalGethBinary(container_path, binary).createPrefundedAccounts(balance, 1).unlockAccounts().startMiner()
-pow_2.setConsensusMechanism(ConsensusMechanism.POW).createPrefundedAccounts(balance, 1).unlockAccounts().startMiner()
-pow_3.setConsensusMechanism(ConsensusMechanism.POW).createPrefundedAccounts(balance, 1).unlockAccounts().startMiner()
+pow_1.setConsensusMechanism(ConsensusMechanism.POW).useLocalGethBinary(binary).createPrefundedAccounts(balance, 1).setNoDiscover().unlockAccounts().startMiner()
+pow_2.setConsensusMechanism(ConsensusMechanism.POW).createPrefundedAccounts(balance, 1).setNoDiscover().unlockAccounts().startMiner()
+pow_3.setConsensusMechanism(ConsensusMechanism.POW).createPrefundedAccounts(balance, 1).setNoDiscover().unlockAccounts().startMiner()
 
-emu.getVirtualNode("eth3").addSharedFolder(container_path, host_path).setDisplayName('Ethereum-1-pow')
-emu.getVirtualNode("eth4").setDisplayName('Ethereum-2-pow')
-emu.getVirtualNode("eth5").setDisplayName('Ethereum-3-pow')
+emu.getVirtualNode("eth4").setDisplayName('Ethereum-1-pow')
+emu.getVirtualNode("eth5").setDisplayName('Ethereum-2-pow')
+emu.getVirtualNode("eth6").setDisplayName('Ethereum-3-pow')
 
 
 # Add the layer and save the component to a file
